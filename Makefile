@@ -18,6 +18,8 @@
 
 TEX_SRC := resume-source/resume.tex
 BUILD_DIR := build
+ARCHIVE_DIR := archive
+TIMESTAMP := $(shell date +"%Y-%m-%d_%H-%M-%S")
 PDF_OUT := $(BUILD_DIR)/resume.pdf
 PUBLIC_PDF := Resume_DillonPrendergast.pdf
 PUBLIC_JPG := Resume.jpg
@@ -37,8 +39,22 @@ all: pdf jpg
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+$(ARCHIVE_DIR):
+	mkdir -p $(ARCHIVE_DIR)
+
+# Archive any existing public files before rebuild
+archive-existing: | $(ARCHIVE_DIR)
+	@if [ -f "$(PUBLIC_PDF)" ]; then \
+	  mv "$(PUBLIC_PDF)" "$(ARCHIVE_DIR)/$(basename $(PUBLIC_PDF))_$(TIMESTAMP).pdf"; \
+	  echo "Archived old $(PUBLIC_PDF)"; \
+	fi
+	@if [ -f "$(PUBLIC_JPG)" ]; then \
+	  mv "$(PUBLIC_JPG)" "$(ARCHIVE_DIR)/$(basename $(PUBLIC_JPG))_$(TIMESTAMP).jpg"; \
+	  echo "Archived old $(PUBLIC_JPG)"; \
+	fi
+
 # Build PDF using latexmk if available; fallback to pdflatex (run twice for refs)
-pdf: $(PUBLIC_PDF)
+pdf: archive-existing $(PUBLIC_PDF)
 
 $(PUBLIC_PDF): $(TEX_SRC) | $(BUILD_DIR)
 	@if command -v latexmk >/dev/null 2>&1; then \
